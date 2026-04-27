@@ -21,6 +21,51 @@ const newId = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
+function ChipLogo() {
+  return (
+    <div className="relative h-10 w-14 shrink-0">
+      <PokerChip
+        color="rgb(37, 99, 235)"
+        className="absolute left-0 top-1 -rotate-12"
+      />
+      <PokerChip
+        color="rgb(5, 150, 105)"
+        className="absolute left-3 top-0 z-10"
+      />
+      <PokerChip
+        color="rgb(220, 38, 38)"
+        className="absolute left-6 top-1 rotate-12"
+      />
+    </div>
+  );
+}
+
+function PokerChip({
+  color,
+  className,
+}: {
+  color: string;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <div
+        className="relative h-8 w-8 rounded-full shadow-sm ring-1 ring-black/10 dark:ring-white/10"
+        style={{
+          background: `repeating-conic-gradient(${color} 0deg 30deg, white 30deg 60deg)`,
+        }}
+      >
+        <div
+          className="absolute inset-1 rounded-full"
+          style={{ background: color }}
+        >
+          <div className="absolute inset-1.5 rounded-full border border-white/40" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PotSplitter() {
   const searchParams = useSearchParams();
   const initial = useMemo(() => {
@@ -123,14 +168,17 @@ export function PotSplitter() {
   return (
     <div className="min-h-full bg-zinc-50 dark:bg-zinc-950">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-              Pot Splitter
-            </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Settle the table after a Texas Hold&apos;em night
-            </p>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3">
+            <ChipLogo />
+            <div>
+              <h1 className="font-title text-xl leading-none tracking-wider text-zinc-900 dark:text-zinc-50">
+                POT SPLITTER
+              </h1>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Settle the table after a Texas Hold&apos;em night
+              </p>
+            </div>
           </div>
           <ShareButton />
         </div>

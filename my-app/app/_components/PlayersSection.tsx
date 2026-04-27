@@ -61,7 +61,7 @@ export function PlayersSection({
     >
       <div className="mb-4 space-y-3">
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <span className="pb-1 pl-1 pt-0.5 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             Buy-in mode
           </span>
           <SegmentedControl<BuyInMode>
@@ -72,13 +72,13 @@ export function PlayersSection({
               { value: "free", label: "Free", hint: MODE_HINT.free },
             ]}
           />
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="pl-2 pt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
             {MODE_HINT[state.mode]}
           </p>
         </div>
 
         {isFixed && (
-          <label className="flex max-w-xs flex-col gap-1 text-sm">
+          <label className="flex max-w-xs flex-col gap-1 text-sm pl-1">
             <span className="font-medium text-zinc-700 dark:text-zinc-300">
               Buy-in price
             </span>
