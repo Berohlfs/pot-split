@@ -48,7 +48,8 @@ export function computeNets(state: AppState): PlayerNet[] {
     (_, i) => adjustedChipCents[i] - buyInCents[i],
   );
 
-  const expenseNetCents = new Array<number>(n).fill(0);
+  const expensePaidCents = new Array<number>(n).fill(0);
+  const expenseShareCents = new Array<number>(n).fill(0);
   for (const e of state.expenses) {
     if (e.sharedAmong.length === 0) continue;
     const amountCents = toCents(e.amount);
@@ -56,22 +57,28 @@ export function computeNets(state: AppState): PlayerNet[] {
     const shareRemainder = amountCents - shareBase * e.sharedAmong.length;
 
     const payerIdx = state.players.findIndex((p) => p.id === e.paidBy);
-    if (payerIdx >= 0) expenseNetCents[payerIdx] += amountCents;
+    if (payerIdx >= 0) expensePaidCents[payerIdx] += amountCents;
 
     e.sharedAmong.forEach((pid, i) => {
       const idx = state.players.findIndex((p) => p.id === pid);
       if (idx < 0) return;
       const owed = shareBase + (i < shareRemainder ? 1 : 0);
-      expenseNetCents[idx] -= owed;
+      expenseShareCents[idx] -= owed;
     });
   }
 
-  return state.players.map((p, i) => ({
-    playerId: p.id,
-    gameNet: fromCents(gameNetCents[i]),
-    expenseNet: fromCents(expenseNetCents[i]),
-    total: fromCents(gameNetCents[i] + expenseNetCents[i]),
-  }));
+  return state.players.map((p, i) => {
+    const expenseNetCents = expensePaidCents[i] + expenseShareCents[i];
+    return {
+      playerId: p.id,
+      gameNet: fromCents(gameNetCents[i]),
+      expenseShare: fromCents(expenseShareCents[i]),
+      expensePaid: fromCents(expensePaidCents[i]),
+      expenseNet: fromCents(expenseNetCents),
+      personalNet: fromCents(gameNetCents[i] + expenseShareCents[i]),
+      total: fromCents(gameNetCents[i] + expenseNetCents),
+    };
+  });
 }
 
 export function computeSettlements(nets: PlayerNet[]): Settlement[] {

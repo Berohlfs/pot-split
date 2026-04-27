@@ -38,23 +38,48 @@ export function SettlementsSection({ state }: { state: AppState }) {
           <ul className="divide-y divide-zinc-100 rounded-md border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
             {nets.map((n) => {
               const tone =
-                Math.abs(n.total) < 0.005
+                Math.abs(n.personalNet) < 0.005
                   ? "text-zinc-500"
-                  : n.total > 0
+                  : n.personalNet > 0
                     ? "text-emerald-600 dark:text-emerald-400"
                     : "text-red-600 dark:text-red-400";
+              const hasShare = Math.abs(n.expenseShare) >= 0.005;
+              const hasPaid = Math.abs(n.expensePaid) >= 0.005;
+              const showBreakdown = hasShare || hasPaid;
               return (
-                <li
-                  key={n.playerId}
-                  className="flex items-center justify-between px-3 py-2 text-sm"
-                >
-                  <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                    {nameById.get(n.playerId)}
-                  </span>
-                  <span className={`font-semibold tabular-nums ${tone}`}>
-                    {n.total >= 0 ? "+" : ""}
-                    {formatCurrency(n.total)}
-                  </span>
+                <li key={n.playerId} className="px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-zinc-800 dark:text-zinc-200">
+                      {nameById.get(n.playerId)}
+                    </span>
+                    <span className={`font-semibold tabular-nums ${tone}`}>
+                      {n.personalNet >= 0 ? "+" : ""}
+                      {formatCurrency(n.personalNet)}
+                    </span>
+                  </div>
+                  {showBreakdown && (
+                    <div className="mt-0.5 flex flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                      <BreakdownPart label="Game" value={n.gameNet} />
+                      {hasShare && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <BreakdownPart
+                            label="Expenses"
+                            value={n.expenseShare}
+                          />
+                        </>
+                      )}
+                      {hasPaid && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <BreakdownPart
+                            label="Reimbursable"
+                            value={n.expenseNet}
+                          />
+                        </>
+                      )}
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -95,5 +120,25 @@ export function SettlementsSection({ state }: { state: AppState }) {
         </div>
       </div>
     </Card>
+  );
+}
+
+function signed(value: number): string {
+  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  return `${sign}${formatCurrency(Math.abs(value))}`;
+}
+
+function BreakdownPart({ label, value }: { label: string; value: number }) {
+  const tone =
+    Math.abs(value) < 0.005
+      ? "text-zinc-500 dark:text-zinc-400"
+      : value > 0
+        ? "text-emerald-600 dark:text-emerald-400"
+        : "text-red-600 dark:text-red-400";
+  return (
+    <span className="tabular-nums">
+      <span className="text-zinc-500 dark:text-zinc-400">{label} </span>
+      <span className={tone}>{signed(value)}</span>
+    </span>
   );
 }

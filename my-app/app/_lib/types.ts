@@ -32,6 +32,10 @@ export type Settlement = {
 export type PlayerNet = {
   playerId: string;
   gameNet: number;
+  expenseShare: number;
+  expensePaid: number;
   expenseNet: number;
+  /** Game + expense share only (excludes reimbursable / cash advanced). */
+  personalNet: number;
   total: number;
 };
