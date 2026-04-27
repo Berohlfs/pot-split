@@ -1,7 +1,10 @@
+export type BuyInMode = "fixed" | "free";
+
 export type Player = {
   id: string;
   name: string;
-  cacifes: number;
+  buyIns: number;
+  buyInAmount: number;
   endingChips: number;
 };
 
@@ -14,8 +17,9 @@ export type Expense = {
 };
 
 export type AppState = {
+  mode: BuyInMode;
   players: Player[];
-  cacifePrice: number;
+  buyInPrice: number;
   expenses: Expense[];
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import type { AppState, Expense } from "../_lib/types";
-import { Card, NumberInput, TextInput } from "./ui";
+import { Card, DecimalInput, TextInput } from "./ui";
 
 type Props = {
   state: AppState;
@@ -94,11 +94,9 @@ function ExpenseRow({
             Amount
           </span>
           <div className="w-32">
-            <NumberInput
+            <DecimalInput
               value={expense.amount}
               onChange={(amount) => onUpdate({ amount })}
-              min={0}
-              step={1}
               prefix="$"
             />
           </div>

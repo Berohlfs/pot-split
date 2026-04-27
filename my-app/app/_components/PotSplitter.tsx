@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { AppState, Expense, Player } from "../_lib/types";
+import type { AppState, BuyInMode, Expense, Player } from "../_lib/types";
 import {
   decodeState,
   emptyState,
@@ -44,7 +44,8 @@ export function PotSplitter() {
     const player: Player = {
       id: newId(),
       name: `Player ${state.players.length + 1}`,
-      cacifes: 1,
+      buyIns: 1,
+      buyInAmount: state.buyInPrice || 0,
       endingChips: 0,
     };
     setState((s) => ({ ...s, players: [...s.players, player] }));
@@ -70,8 +71,27 @@ export function PotSplitter() {
     }));
   };
 
-  const setCacifePrice = (price: number) => {
-    setState((s) => ({ ...s, cacifePrice: price }));
+  const setBuyInPrice = (price: number) => {
+    setState((s) => ({ ...s, buyInPrice: price }));
+  };
+
+  const setMode = (mode: BuyInMode) => {
+    setState((s) => {
+      // When switching to free, seed each player's free amount from their fixed
+      // buy-ins so the user doesn't lose the work they already entered.
+      if (mode === "free" && s.mode !== "free") {
+        return {
+          ...s,
+          mode,
+          players: s.players.map((p) =>
+            p.buyInAmount === 0
+              ? { ...p, buyInAmount: p.buyIns * s.buyInPrice }
+              : p,
+          ),
+        };
+      }
+      return { ...s, mode };
+    });
   };
 
   const addExpense = () => {
@@ -124,7 +144,8 @@ export function PotSplitter() {
             onAddPlayer={addPlayer}
             onUpdatePlayer={updatePlayer}
             onRemovePlayer={removePlayer}
-            onSetCacifePrice={setCacifePrice}
+            onSetBuyInPrice={setBuyInPrice}
+            onSetMode={setMode}
           />
           <ExpensesSection
             state={state}

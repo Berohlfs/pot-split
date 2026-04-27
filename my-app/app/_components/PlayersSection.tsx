@@ -1,8 +1,15 @@
 "use client";
 
-import type { AppState, Player } from "../_lib/types";
-import { untracedChange } from "../_lib/calc";
-import { Card, NumberInput, TextInput, formatCurrency } from "./ui";
+import type { AppState, BuyInMode, Player } from "../_lib/types";
+import { playerBuyIn, untracedChange } from "../_lib/calc";
+import {
+  Card,
+  DecimalInput,
+  IntegerInput,
+  SegmentedControl,
+  TextInput,
+  formatCurrency,
+} from "./ui";
 
 type Props = {
   state: AppState;
@@ -10,7 +17,13 @@ type Props = {
   onAddPlayer: () => void;
   onUpdatePlayer: (id: string, patch: Partial<Player>) => void;
   onRemovePlayer: (id: string) => void;
-  onSetCacifePrice: (price: number) => void;
+  onSetBuyInPrice: (price: number) => void;
+  onSetMode: (mode: BuyInMode) => void;
+};
+
+const MODE_HINT: Record<BuyInMode, string> = {
+  fixed: "Same price per buy-in. Players add stacks as needed (tournament-style).",
+  free: "Each player enters their own total buy-in (cash game-style).",
 };
 
 export function PlayersSection({
@@ -19,15 +32,17 @@ export function PlayersSection({
   onAddPlayer,
   onUpdatePlayer,
   onRemovePlayer,
-  onSetCacifePrice,
+  onSetBuyInPrice,
+  onSetMode,
 }: Props) {
   const totalBuyIn = state.players.reduce(
-    (s, p) => s + p.cacifes * state.cacifePrice,
+    (s, p) => s + playerBuyIn(p, state),
     0,
   );
   const totalChips = state.players.reduce((s, p) => s + p.endingChips, 0);
   const diff = untracedChange(state);
   const atMax = state.players.length >= maxPlayers;
+  const isFixed = state.mode === "fixed";
 
   return (
     <Card
@@ -44,19 +59,36 @@ export function PlayersSection({
         </button>
       }
     >
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-700 dark:text-zinc-300">
-            Cacife price
+      <div className="mb-4 space-y-3">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Buy-in mode
           </span>
-          <NumberInput
-            value={state.cacifePrice}
-            onChange={onSetCacifePrice}
-            min={0}
-            step={1}
-            prefix="$"
+          <SegmentedControl<BuyInMode>
+            value={state.mode}
+            onChange={onSetMode}
+            options={[
+              { value: "fixed", label: "Fixed", hint: MODE_HINT.fixed },
+              { value: "free", label: "Free", hint: MODE_HINT.free },
+            ]}
           />
-        </label>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            {MODE_HINT[state.mode]}
+          </p>
+        </div>
+
+        {isFixed && (
+          <label className="flex max-w-xs flex-col gap-1 text-sm">
+            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+              Buy-in price
+            </span>
+            <DecimalInput
+              value={state.buyInPrice}
+              onChange={onSetBuyInPrice}
+              prefix="$"
+            />
+          </label>
+        )}
       </div>
 
       {state.players.length === 0 ? (
@@ -69,7 +101,9 @@ export function PlayersSection({
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                 <th className="px-4 py-2 font-medium sm:px-2">Name</th>
-                <th className="px-4 py-2 font-medium sm:px-2">Cacifes</th>
+                <th className="px-4 py-2 font-medium sm:px-2">
+                  {isFixed ? "Buy-ins" : "Buy-in"}
+                </th>
                 <th className="px-4 py-2 font-medium sm:px-2">Ending chips</th>
                 <th className="px-4 py-2 font-medium sm:px-2"></th>
               </tr>
@@ -85,21 +119,29 @@ export function PlayersSection({
                     />
                   </td>
                   <td className="px-4 py-2 sm:px-2">
-                    <NumberInput
-                      value={p.cacifes}
-                      onChange={(cacifes) => onUpdatePlayer(p.id, { cacifes })}
-                      min={0}
-                      step={1}
-                    />
+                    {isFixed ? (
+                      <IntegerInput
+                        value={p.buyIns}
+                        onChange={(buyIns) =>
+                          onUpdatePlayer(p.id, { buyIns })
+                        }
+                      />
+                    ) : (
+                      <DecimalInput
+                        value={p.buyInAmount}
+                        onChange={(buyInAmount) =>
+                          onUpdatePlayer(p.id, { buyInAmount })
+                        }
+                        prefix="$"
+                      />
+                    )}
                   </td>
                   <td className="px-4 py-2 sm:px-2">
-                    <NumberInput
+                    <DecimalInput
                       value={p.endingChips}
                       onChange={(endingChips) =>
                         onUpdatePlayer(p.id, { endingChips })
                       }
-                      min={0}
-                      step={1}
                       prefix="$"
                     />
                   </td>

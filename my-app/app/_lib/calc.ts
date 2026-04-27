@@ -1,11 +1,19 @@
-import type { AppState, PlayerNet, Settlement } from "./types";
+import type { AppState, Player, PlayerNet, Settlement } from "./types";
 
 const toCents = (n: number) => Math.round(n * 100);
 const fromCents = (n: number) => n / 100;
 
+export function playerBuyIn(p: Player, state: AppState): number {
+  return state.mode === "fixed" ? p.buyIns * state.buyInPrice : p.buyInAmount;
+}
+
+function playerBuyInCents(p: Player, state: AppState): number {
+  return toCents(playerBuyIn(p, state));
+}
+
 export function untracedChange(state: AppState): number {
   const buyInCents = state.players.reduce(
-    (sum, p) => sum + toCents(p.cacifes * state.cacifePrice),
+    (sum, p) => sum + playerBuyInCents(p, state),
     0,
   );
   const chipCents = state.players.reduce(
@@ -19,9 +27,7 @@ export function computeNets(state: AppState): PlayerNet[] {
   const n = state.players.length;
   if (n === 0) return [];
 
-  const buyInCents = state.players.map((p) =>
-    toCents(p.cacifes * state.cacifePrice),
-  );
+  const buyInCents = state.players.map((p) => playerBuyInCents(p, state));
   const chipCents = state.players.map((p) => toCents(p.endingChips));
 
   const totalBuyIn = buyInCents.reduce((a, b) => a + b, 0);
