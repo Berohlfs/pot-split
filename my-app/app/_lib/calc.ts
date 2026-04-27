@@ -28,14 +28,14 @@ export function computeNets(state: AppState): PlayerNet[] {
   const totalChips = chipCents.reduce((a, b) => a + b, 0);
   const diff = totalChips - totalBuyIn;
 
-  // Distribute untraced change evenly across players, putting the integer-cent
-  // remainder on the first players so the redistributed amount sums exactly to
-  // diff.
+  // Bring sum(adjustedChips) to sum(buyIns) by subtracting diff/N from each
+  // player's chips. The integer-cent remainder is spread one cent at a time
+  // across the first |remainder| players so the totals are exact.
   const baseShare = Math.trunc(diff / n);
   const remainder = diff - baseShare * n;
   const adjustedChipCents = chipCents.map((c, i) => {
     const extra = i < Math.abs(remainder) ? Math.sign(remainder) : 0;
-    return c + baseShare + extra;
+    return c - baseShare - extra;
   });
 
   const gameNetCents = state.players.map(
@@ -81,12 +81,9 @@ export function computeSettlements(nets: PlayerNet[]): Settlement[] {
     const debtor = balances[0];
     const creditor = balances[balances.length - 1];
     if (!debtor || !creditor) break;
-    if (debtor.cents >= -0 && creditor.cents <= 0) break;
     if (debtor.cents >= 0 || creditor.cents <= 0) break;
 
     const amount = Math.min(-debtor.cents, creditor.cents);
-    if (amount <= 0) break;
-
     settlements.push({
       from: debtor.id,
       to: creditor.id,
