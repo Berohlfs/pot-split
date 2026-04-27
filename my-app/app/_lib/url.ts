@@ -1,3 +1,7 @@
+import {
+  compressToEncodedURIComponent,
+  decompressFromEncodedURIComponent,
+} from "lz-string";
 import type { AppState, BuyInMode, Player } from "./types";
 
 export const URL_PARAM = "data";
@@ -7,13 +11,15 @@ export function emptyState(): AppState {
 }
 
 export function encodeState(state: AppState): string {
-  return encodeURIComponent(JSON.stringify(state));
+  return compressToEncodedURIComponent(JSON.stringify(state));
 }
 
 export function decodeState(raw: string | null): AppState | null {
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(decodeURIComponent(raw)) as unknown;
+    const json = decompressFromEncodedURIComponent(raw);
+    if (!json) return null;
+    const parsed = JSON.parse(json) as unknown;
     if (!parsed || typeof parsed !== "object") return null;
     const s = parsed as Record<string, unknown>;
 
